@@ -23,10 +23,10 @@ UKF::UKF() {
   P_ = MatrixXd::Identity(5, 5);  // safer initialization for covariance matrix
 
   // Process noise standard deviation longitudinal acceleration in m/s^2
-  std_a_ = 3.2;
+  std_a_ = 2.5;
 
   // Process noise standard deviation yaw acceleration in rad/s^2
-  std_yawdd_ = 1.9;
+  std_yawdd_ = 1;
   
   /**
    * DO NOT MODIFY measurement noise values below.
@@ -119,21 +119,16 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
 
     } else if (meas_package.sensor_type_ == MeasurementPackage::LASER) {
       std::cout << "Initialized by lidar\n";
+      // initialize state: position from lidar, all others are zeros
       x_ << meas_package.raw_measurements_[0], meas_package.raw_measurements_[1], 0, 0, 0;
-
-      /*
-      P_ << std_laspx_*std_laspx_, 0, 0, 0, 0,
-            0, std_laspy_*std_laspy_, 0, 0, 0,
-            0, 0, 1000.0, 0, 0,
-            0, 0, 0, (2.0*M_PI)*(2.0*M_PI), 0,
-            0, 0, 0, 0, 0.1*0.1;
-      */
+      
+      // initialize covariance matrix
       P_(0,0) = std_laspx_*std_laspx_;
       P_(1,1) = std_laspy_*std_laspy_;
-      P_(2,2) = 50.0;     // speed
+      P_(2,2) = 1.0;     // speed
       P_(3,3) = (2.0*M_PI)*(2.0*M_PI);  // no info about the azimuth
-      P_(4,4) = 0.25;            // yaw rate (rad/s)^2 
-      
+      P_(4,4) = 1;            // yaw rate (rad/s)^2 
+      std::cout << "Initial covariance matrix P is " << P_ << std::endl;
     }
 
 		time_us_ = meas_package.timestamp_;
@@ -314,8 +309,9 @@ void UKF::UpdateLidar(MeasurementPackage meas_package) {
 			 0, 1, 0, 0, 0;
 
   MatrixXd R = MatrixXd(2,2);
-  R(0,0) = std_laspx_*std_laspx_;
-  R(1,1) = std_laspy_*std_laspy_;
+  R << std_laspx_*std_laspx_, 0, 0, std_laspy_*std_laspy_;
+  //R(0,0) = std_laspx_*std_laspx_;
+  //R(1,1) = std_laspy_*std_laspy_;
 
   VectorXd z_pred = H * x_;
 	VectorXd y = z - z_pred;
@@ -331,6 +327,7 @@ void UKF::UpdateLidar(MeasurementPackage meas_package) {
 	long x_size = x_.size();
 	MatrixXd I = MatrixXd::Identity(x_size, x_size);
 	P_ = (I - K * H) * P_;
+  std::cout << P_ << std::endl;
 }
 
 void UKF::PredictRadarMeasurement(Eigen::MatrixXd* Zsig_out, Eigen::VectorXd* z_out, Eigen::MatrixXd* S_out){
@@ -410,9 +407,9 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
 
   // create matrix for predicted measurement covariance
   MatrixXd S = MatrixXd(n_z,n_z);
-
+  std::cout << S << "\n";
   UKF::PredictRadarMeasurement(&Zsig, &z_pred, &S);
-
+  std::cout << S << "\n";
   // create matrix for cross correlation Tc
   MatrixXd Tc = MatrixXd(n_x_, n_z);
 
