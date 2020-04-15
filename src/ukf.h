@@ -22,6 +22,12 @@ class UKF {
    */
   void ProcessMeasurement(MeasurementPackage meas_package);
 
+  void AugmentedSigmaPoints();
+
+  void SigmaPointPrediction(double delta_t);
+
+  void PredictMeanAndCovariance();
+
   /**
    * Prediction Predicts sigma points, the state, and the state covariance
    * matrix
@@ -34,6 +40,8 @@ class UKF {
    * @param meas_package The measurement at k+1
    */
   void UpdateLidar(MeasurementPackage meas_package);
+
+  void PredictRadarMeasurement(Eigen::MatrixXd* Zsig_out, Eigen::VectorXd* z_out, Eigen::MatrixXd* S_out);
 
   /**
    * Updates the state and the state covariance matrix using a radar measurement
