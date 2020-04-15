@@ -13,7 +13,7 @@ UKF::UKF() {
   use_laser_ = true;
 
   // if this is false, radar measurements will be ignored (except during init)
-  use_radar_ = true;
+  use_radar_ = false;
 
   // initial state vector
   x_ = VectorXd(5);
@@ -159,11 +159,11 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
   UKF::Prediction(delta_t);
 
   // Correction step
-  if (meas_package.sensor_type_ == MeasurementPackage::RADAR) {
+  if (meas_package.sensor_type_ == MeasurementPackage::RADAR && use_radar_) {
     std::cout << "Process radar measurement\n";
     UKF::UpdateRadar(meas_package);
 
-  } else if (meas_package.sensor_type_ == MeasurementPackage::LASER) {
+  } else if (meas_package.sensor_type_ == MeasurementPackage::LASER && use_laser_) {
     std::cout << "Process lidar measurement\n";
     UKF::UpdateLidar(meas_package);
 
@@ -447,12 +447,10 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
 
   // angle normalization
    while (z_diff(1)>= M_PI) {
-     std::cout << "Norm\n";
      z_diff(1)-=2.*M_PI;
   }
 
   while (z_diff(1)<-M_PI) {
-     std::cout << "Norm\n";
      z_diff(1)+=2.*M_PI;
    }
 
